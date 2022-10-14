@@ -408,7 +408,7 @@ void Object3d::CreateModel()
 	std::ifstream file;
 
 	//OBJファイルを開く
-	file.open("Resources/triangle/triangle.obj");
+	file.open("Resources/triangle/triangle_tex.obj");
 
 	if(file.fail()){
 	assert(0);
@@ -441,25 +441,67 @@ void Object3d::CreateModel()
 	
 	positions.emplace_back(position);
 
-	VertexPosNormalUv vertex{};
+	/*VertexPosNormalUv vertex{};
 	vertex.pos = position;
-	vertices.emplace_back(vertex);
+	vertices.emplace_back(vertex);*/
 
 	}
+	//先頭文字列がVtならテクスチャ
+	if(Key=="vt"){
+	
+		//U,V成分読み込み
+		XMFLOAT2 texcoord{};
+		line_stream>>texcoord.x;
+		line_stream>>texcoord.y;
+		//V方向反転
+		texcoord.y=1.0f - texcoord.y;
+
+		//テクスチャ座標データに追加
+		texcoords.emplace_back(texcoord);
+	}
+	//先頭文字列がVnならテクスチャ
+	if(Key=="vn"){
+	//X,Y,Z成分読み込み
+		XMFLOAT3 normal{};
+		line_stream>>normal.x;
+		line_stream>>normal.y;
+		line_stream>>normal.z;
+		//法線ベクトルデータに追加
+		normals.emplace_back(normal);
+	}
+
+
 	//--------------------------------------
 	if(Key == "f"){
 		string index_string;
 		while(getline(line_stream,index_string,' ')){
 		
 		std::istringstream index_stream(index_string);
-		unsigned short indexPosition;
+		unsigned short indexPosition,indexTexcoord,indexNormal;
 		index_stream>>indexPosition;
+		/*indices.emplace_back(indexPosition-1);*/
 
-		indices.emplace_back(indexPosition-1);
 
+		index_stream.seekg(1,ios_base::cur);
+		index_stream>>indexTexcoord;
+		index_stream.seekg(1,ios_base::cur);
+		index_stream>> indexNormal;
+
+		//頂点データの追加
+		VertexPosNormalUv vertex{};
+		vertex.pos = positions[indexPosition-1];
+		vertex.normal = normals[indexNormal-1];
+		vertex.uv = texcoords[indexTexcoord-1];
+		vertices.emplace_back(vertex);
+		indices.emplace_back((unsigned short)indices.size());
 		}
 
 	}
+
+
+
+
+
 	
 	}
 	//--------------------------------------------
